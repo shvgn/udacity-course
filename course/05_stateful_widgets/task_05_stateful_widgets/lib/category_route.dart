@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-
 import 'package:task_05_stateful_widgets/category.dart';
 import 'package:task_05_stateful_widgets/unit.dart';
 
@@ -16,12 +15,12 @@ final _backgroundColor = Colors.green[100];
 ///
 /// While it is named CategoryRoute, a more apt name would be CategoryScreen,
 /// because it is responsible for the UI at the route's destination.
-// TODO: Make CategoryRoute a StatefulWidget
-class CategoryRoute extends StatelessWidget {
-  const CategoryRoute();
+class CategoryRoute extends StatefulWidget {
+  @override
+  _CategoryRouteState createState() => _CategoryRouteState();
+}
 
-  // TODO: Create State object for the CategoryRoute
-
+class _CategoryRouteState extends State<CategoryRoute> {
   static const _categoryNames = <String>[
     'Length',
     'Area',
@@ -44,10 +43,12 @@ class CategoryRoute extends StatelessWidget {
     Colors.red,
   ];
 
+  final categories = <Category>[];
+
   /// Makes the correct number of rows for the list view.
   ///
   /// For portrait, we use a [ListView].
-  Widget _buildCategoryWidgets(List<Widget> categories) {
+  Widget _buildCategoryWidgets() {
     return ListView.builder(
       itemBuilder: (BuildContext context, int index) => categories[index],
       itemCount: categories.length,
@@ -66,14 +67,7 @@ class CategoryRoute extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    // TODO: Instead of re-creating a list of Categories in every build(),
-    // save this as a variable inside the State object and create
-    // the list at initialization (in initState()).
-    // This way, you also don't have to pass in the list of categories to
-    // _buildCategoryWidgets()
-    final categories = <Category>[];
-
+  void initState() {
     for (var i = 0; i < _categoryNames.length; i++) {
       categories.add(Category(
         name: _categoryNames[i],
@@ -83,10 +77,15 @@ class CategoryRoute extends StatelessWidget {
       ));
     }
 
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final listView = Container(
       color: _backgroundColor,
       padding: EdgeInsets.symmetric(horizontal: 8.0),
-      child: _buildCategoryWidgets(categories),
+      child: _buildCategoryWidgets(),
     );
 
     final appBar = AppBar(

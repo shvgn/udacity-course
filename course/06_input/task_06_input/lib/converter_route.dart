@@ -38,12 +38,60 @@ class ConverterRoute extends StatefulWidget {
 }
 
 class _ConverterRouteState extends State<ConverterRoute> {
-  // TODO: Set some variables, such as for keeping track of the user's input
-  // value and units
+  Unit _fromUnit;
+  Unit _toUnit;
+  String _result;
+  String _input;
+  bool _validationError = false;
 
-  // TODO: Determine whether you need to override anything, such as initState()
+  TextEditingController _inputController;
 
-  // TODO: Add other helper functions. We've given you one, _format()
+  RegExp matchCommas = RegExp(r',');
+  RegExp matchSpaces = RegExp('\s+');
+
+  @override
+  initState() {
+    super.initState();
+    setState(() {
+      _inputController = TextEditingController(text: '1');
+    });
+    _recalc('1', widget.units[0], widget.units[1]);
+  }
+
+  String _recognize(String inputValue) {
+    var trimmed = inputValue.trim();
+    if (trimmed == '') {
+      return '0';
+    }
+    return trimmed.replaceAll(matchSpaces, '').replaceFirst(matchCommas, '.');
+  }
+
+  bool _hasError(String inputValue) => null == double.tryParse(inputValue);
+
+  void _recalc(String inputValue, Unit from, Unit to) {
+    _input = _recognize(inputValue);
+    print('recognized $_input');
+
+    setState(() {
+      _validationError = _hasError(_input);
+      _fromUnit = from;
+      _toUnit = to;
+      _result = _validationError ? _result : _convert(_input, from, to);
+    });
+  }
+
+  String _convert(String value, Unit from, Unit to) {
+    print('from $from');
+    print('to $to');
+
+    var factor = _toUnit.conversion / _fromUnit.conversion;
+    var inputNum = double.tryParse(value.trim()) ?? 0.0;
+    var result = _format(factor * inputNum);
+
+    print('result $result');
+
+    return result;
+  }
 
   /// Clean up conversion; trim trailing zeros, e.g. 5.500 -> 5.5, 10.0 -> 10
   String _format(double conversion) {
@@ -63,39 +111,124 @@ class _ConverterRouteState extends State<ConverterRoute> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Create the 'input' group of widgets. This is a Column that
-    // includes the input value, and 'from' unit [Dropdown].
+    var unitItems = widget.units
+        .map(
+          (Unit unit) => DropdownMenuItem<Unit>(
+                value: unit,
+                child: Padding(
+                  padding: EdgeInsets.only(left: _padding.left / 2),
+                  child: Text(
+                    unit.name,
+//                    style: Theme.of(context).textTheme.body2,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ),
+        )
+        .toList();
 
-    // TODO: Create a compare arrows icon.
+    var fromUnitDropDown = DropdownButtonHideUnderline(
+      child: DropdownButton<Unit>(
+        value: _fromUnit,
+        items: unitItems,
+        onChanged: (Unit from) => _recalc(_input, from, _toUnit),
+      ),
+    );
 
-    // TODO: Create the 'output' group of widgets. This is a Column that
-    // includes the output value, and 'to' unit [Dropdown].
+    var toUnitDropDown = DropdownButtonHideUnderline(
+      child: DropdownButton<Unit>(
+        value: _toUnit,
+        items: unitItems,
+        onChanged: (Unit to) => _recalc(_input, _fromUnit, to),
+      ),
+    );
 
-    // TODO: Return the input, arrows, and output widgets, wrapped in a Column.
-
-    // TODO: Delete the below placeholder code.
-    final unitWidgets = widget.units.map((Unit unit) {
-      return Container(
-        color: widget.color,
-        margin: EdgeInsets.all(8.0),
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          children: <Widget>[
-            Text(
-              unit.name,
-              style: Theme.of(context).textTheme.headline,
+    var wrapInBorder = (Widget w, EdgeInsets padding) => Container(
+          decoration: ShapeDecoration(
+            shape: Border.all(
+              width: 1,
+              color: Theme.of(context).primaryColor,
             ),
-            Text(
-              'Conversion: ${unit.conversion}',
-              style: Theme.of(context).textTheme.subhead,
-            ),
-          ],
+          ),
+          child: Padding(
+            padding: padding,
+            child: w,
+          ),
+        );
+
+    var dropDownPadding = EdgeInsets.only(
+      top: _padding.top / 2,
+    );
+
+    var inputTextField = TextField(
+      controller: _inputController,
+      autofocus: true,
+      autocorrect: false,
+      keyboardType: TextInputType.number,
+      style: Theme.of(context).textTheme.display1,
+      decoration: InputDecoration(
+        labelText: 'Input',
+        labelStyle: Theme.of(context).textTheme.display1,
+        errorText: _validationError ? 'Invalid number entered' : null,
+        // while focused, borders will be wider
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
         ),
-      );
-    }).toList();
+      ),
+      onChanged: (value) => _recalc(value, _fromUnit, _toUnit),
+    );
 
-    return ListView(
-      children: unitWidgets,
+    var inputGroup = Padding(
+      padding: _padding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          inputTextField,
+          Padding(
+            padding: dropDownPadding,
+            child: wrapInBorder(fromUnitDropDown, _padding / 2),
+          ),
+        ],
+      ),
+    );
+
+    var outputGroup = Padding(
+      padding: _padding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          // TODO: add 'Output' label
+          wrapInBorder(
+              Text(
+                _result,
+                style: Theme.of(context).textTheme.display1,
+              ),
+              _padding),
+          Padding(
+            padding: dropDownPadding,
+            child: wrapInBorder(toUnitDropDown, _padding / 2),
+          )
+        ],
+      ),
+    );
+
+    var arrowsIcon = RotatedBox(
+        quarterTurns: 1,
+        child: Icon(
+          Icons.compare_arrows,
+          size: 40,
+        ));
+
+    return Column(
+      children: <Widget>[
+        inputGroup,
+        arrowsIcon,
+        outputGroup,
+      ],
     );
   }
 }

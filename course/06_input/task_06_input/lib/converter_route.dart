@@ -81,16 +81,9 @@ class _ConverterRouteState extends State<ConverterRoute> {
   }
 
   String _convert(String value, Unit from, Unit to) {
-    print('from $from');
-    print('to $to');
-
-    var factor = _toUnit.conversion / _fromUnit.conversion;
-    var inputNum = double.tryParse(value.trim()) ?? 0.0;
-    var result = _format(factor * inputNum);
-
-    print('result $result');
-
-    return result;
+    final factor = _toUnit.conversion / _fromUnit.conversion;
+    final inputNum = double.tryParse(value.trim()) ?? 0.0;
+    return _format(factor * inputNum);
   }
 
   /// Clean up conversion; trim trailing zeros, e.g. 5.500 -> 5.5, 10.0 -> 10
@@ -111,7 +104,7 @@ class _ConverterRouteState extends State<ConverterRoute> {
 
   @override
   Widget build(BuildContext context) {
-    var unitItems = widget.units
+    final unitItems = widget.units
         .map(
           (Unit unit) => DropdownMenuItem<Unit>(
                 value: unit,
@@ -131,7 +124,7 @@ class _ConverterRouteState extends State<ConverterRoute> {
         )
         .toList();
 
-    var fromUnitDropDown = DropdownButtonHideUnderline(
+    final fromUnitDropDown = DropdownButtonHideUnderline(
       child: DropdownButton<Unit>(
         value: _fromUnit,
         items: unitItems,
@@ -139,7 +132,7 @@ class _ConverterRouteState extends State<ConverterRoute> {
       ),
     );
 
-    var toUnitDropDown = DropdownButtonHideUnderline(
+    final toUnitDropDown = DropdownButtonHideUnderline(
       child: DropdownButton<Unit>(
         value: _toUnit,
         items: unitItems,
@@ -147,7 +140,7 @@ class _ConverterRouteState extends State<ConverterRoute> {
       ),
     );
 
-    var wrapInBorder = (Widget w, EdgeInsets padding) => Container(
+    final wrapInBorder = (Widget w, EdgeInsets padding) => Container(
           decoration: ShapeDecoration(
             shape: Border.all(
               width: 1,
@@ -160,11 +153,11 @@ class _ConverterRouteState extends State<ConverterRoute> {
           ),
         );
 
-    var dropDownPadding = EdgeInsets.only(
+    final dropDownPadding = EdgeInsets.only(
       top: _padding.top / 2,
     );
 
-    var inputTextField = TextField(
+    final inputTextField = TextField(
       controller: _inputController,
       autofocus: true,
       autocorrect: false,
@@ -182,7 +175,7 @@ class _ConverterRouteState extends State<ConverterRoute> {
       onChanged: (value) => _recalc(value, _fromUnit, _toUnit),
     );
 
-    var inputGroup = Padding(
+    final inputGroup = Padding(
       padding: _padding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -196,18 +189,27 @@ class _ConverterRouteState extends State<ConverterRoute> {
       ),
     );
 
-    var outputGroup = Padding(
+    final outputGroup = Padding(
       padding: _padding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          // TODO: add 'Output' label
-          wrapInBorder(
-              Text(
-                _result,
-                style: Theme.of(context).textTheme.display1,
-              ),
-              _padding),
+          InputDecorator(
+            child: Text(
+              _result,
+              style: Theme.of(context).textTheme.display1,
+            ),
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.zero,
+                  borderSide: BorderSide(
+                    color: Theme.of(context).primaryColor,
+                    width: 1.0,
+                  )),
+              labelText: 'Output',
+              labelStyle: Theme.of(context).textTheme.display1,
+            ),
+          ),
           Padding(
             padding: dropDownPadding,
             child: wrapInBorder(toUnitDropDown, _padding / 2),
@@ -216,7 +218,7 @@ class _ConverterRouteState extends State<ConverterRoute> {
       ),
     );
 
-    var arrowsIcon = RotatedBox(
+    final arrowsIcon = RotatedBox(
         quarterTurns: 1,
         child: Icon(
           Icons.compare_arrows,
